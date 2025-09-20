@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { Wallet, Briefcase, MinusCircle, PlusCircle, ExternalLink } from 'lucide-react';
+import { Wallet, Briefcase } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ethers } from 'ethers';
 
-// Mock project data
+// Mock project data - this would come from your smart contract or a backend
 const projects = [
   { id: 1, name: 'Andaman Coast Mangrove Restoration', price: 15, available: 1200 },
   { id: 2, name: 'Sunderbans Seagrass Initiative', price: 22, available: 850 },
@@ -18,45 +18,66 @@ const projects = [
 
 export default function CorporateDashboardPage() {
   const { toast } = useToast();
-  const [walletConnected, setWalletConnected] = useState(false);
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [walletAddress, setWalletAddress] = useState('');
-  const [tokenBalance, setTokenBalance] = useState(0);
+  const [tokenBalance, setTokenBalance] = useState(0); // Assuming this is a mock balance for now
   const [purchaseAmounts, setPurchaseAmounts] = useState<{[key: number]: number}>({});
+
+  const isWalletConnected = !!walletAddress;
 
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+      const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
-          // In a real app, fetch balance for new account
+          // In a real app, you'd fetch balance and other details for the new account
         } else {
-          setWalletConnected(false);
           setWalletAddress('');
-          setTokenBalance(0);
+          setSigner(null);
+          setProvider(null);
         }
-      });
+      };
+      
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+
+      return () => {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      };
     }
   }, []);
   
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        setWalletConnected(true);
-        setWalletAddress(accounts[0]);
-        // Mock token balance
+        const browserProvider = new ethers.BrowserProvider(window.ethereum);
+        await browserProvider.send('eth_requestAccounts', []);
+        const currentSigner = await browserProvider.getSigner();
+        const address = await currentSigner.getAddress();
+        
+        setProvider(browserProvider);
+        setSigner(currentSigner);
+        setWalletAddress(address);
+        
+        // Mock token balance for demonstration
         const randomBalance = Math.floor(Math.random() * 50000) + 1000;
         setTokenBalance(randomBalance);
-        toast({ title: 'Wallet Connected', description: `Address: ${accounts[0].substring(0, 6)}...${accounts[0].substring(38)}` });
+        
+        toast({ title: 'Wallet Connected', description: `Address: ${address.substring(0, 6)}...${address.substring(address.length - 4)}` });
       } catch (error) {
-        toast({ variant: 'destructive', title: 'Connection Failed', description: 'Could not connect to MetaMask.' });
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Connection Failed', description: 'Could not connect to MetaMask. Please try again.' });
       }
     } else {
-      toast({ variant: 'destructive', title: 'MetaMask Not Found', description: 'Please install the MetaMask extension.' });
+      toast({ variant: 'destructive', title: 'MetaMask Not Found', description: 'Please install the MetaMask extension to use this feature.' });
     }
   };
 
   const handlePurchase = (projectId: number) => {
+    if (!signer) {
+        toast({ variant: 'destructive', title: 'Wallet Not Connected', description: 'Please connect your wallet to proceed.' });
+        return;
+    }
     const amount = purchaseAmounts[projectId] || 0;
     if (amount <= 0) {
         toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Please enter a positive number of credits to purchase.' });
@@ -71,6 +92,14 @@ export default function CorporateDashboardPage() {
         return;
     }
 
+    // In a real application, you would create a transaction here to call the smart contract.
+    // For example:
+    // const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    // const tx = await contract.purchase(projectId, amount, { value: ethers.parseEther(cost.toString()) });
+    // await tx.wait();
+
+    console.log(`Simulating purchase of ${amount} credits from project ${projectId} for ${cost} tokens.`);
+    
     setTokenBalance(prev => prev - cost);
     toast({ title: 'Purchase Successful!', description: `You purchased ${amount.toLocaleString()} credits from ${project.name} for ${cost.toLocaleString()} tokens.` });
     
@@ -80,7 +109,7 @@ export default function CorporateDashboardPage() {
   
   const handleAmountChange = (projectId: number, value: string) => {
     const amount = parseInt(value, 10);
-    setPurchaseAmounts(prev => ({...prev, [projectId]: Math.max(0, amount)}));
+    setPurchaseAmounts(prev => ({...prev, [projectId]: Math.max(0, isNaN(amount) ? 0 : amount)}));
   };
 
   return (
@@ -92,7 +121,7 @@ export default function CorporateDashboardPage() {
           </h1>
           <p className="text-muted-foreground">Purchase and manage your blue carbon credits.</p>
         </div>
-        {!walletConnected ? (
+        {!isWalletConnected ? (
           <Button onClick={connectWallet} className="w-full sm:w-auto">
             <Wallet className="mr-2" /> Connect Wallet
           </Button>
@@ -109,7 +138,7 @@ export default function CorporateDashboardPage() {
         )}
       </div>
 
-       {!walletConnected && (
+       {!isWalletConnected && (
          <Alert>
             <Wallet className="h-4 w-4" />
             <AlertTitle>Connect Your Wallet</AlertTitle>
@@ -141,7 +170,7 @@ export default function CorporateDashboardPage() {
                         placeholder="Amount"
                         value={purchaseAmounts[project.id] || ''}
                         onChange={(e) => handleAmountChange(project.id, e.target.value)}
-                        disabled={!walletConnected}
+                        disabled={!isWalletConnected}
                         min="0"
                     />
                     {purchaseAmounts[project.id] > 0 && (
@@ -152,7 +181,7 @@ export default function CorporateDashboardPage() {
                  </div>
                 <Button 
                   onClick={() => handlePurchase(project.id)} 
-                  disabled={!walletConnected || !purchaseAmounts[project.id] || purchaseAmounts[project.id] <= 0}
+                  disabled={!isWalletConnected || !purchaseAmounts[project.id] || purchaseAmounts[project.id] <= 0}
                   className="w-full sm:w-auto"
                 >
                   Purchase Credits
