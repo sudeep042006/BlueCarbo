@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -87,6 +87,14 @@ export default function AdminVerificationPage() {
     }
   }
 
+  const getStatusKey = (status: string) => {
+      const lowerStatus = status.toLowerCase();
+      if (lowerStatus in statusConfig) {
+          return lowerStatus as keyof typeof statusConfig;
+      }
+      return 'needs clarification';
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -152,7 +160,7 @@ export default function AdminVerificationPage() {
                 <FormField
                   control={form.control}
                   name="evidenceDocument"
-                  render={({ field: { onChange, ...field } }) => (
+                  render={({ field: { onChange, value, ...fieldProps } }) => (
                     <FormItem>
                       <FormLabel>Evidence Document</FormLabel>
                       <FormControl>
@@ -160,7 +168,7 @@ export default function AdminVerificationPage() {
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
                           onChange={(e) => onChange(e.target.files)}
-                          {...field}
+                          {...fieldProps}
                         />
                       </FormControl>
                       <FormMessage />
@@ -203,9 +211,9 @@ export default function AdminVerificationPage() {
             )}
             {assessmentResult && (
               <div className="space-y-6 w-full">
-                <Alert className={cn(statusConfig[assessmentResult.verificationStatus.toLowerCase() as keyof typeof statusConfig]?.bgColor)}>
+                 <Alert className={cn(statusConfig[getStatusKey(assessmentResult.verificationStatus)]?.bgColor)}>
                   <AlertTitle className="text-lg font-semibold flex items-center gap-2">
-                    {React.createElement(statusConfig[assessmentResult.verificationStatus.toLowerCase() as keyof typeof statusConfig]?.icon || AlertCircle, { className: cn('h-5 w-5', statusConfig[assessmentResult.verificationStatus.toLowerCase() as keyof typeof statusConfig]?.color) })}
+                    {React.createElement(statusConfig[getStatusKey(assessmentResult.verificationStatus)]?.icon || AlertCircle, { className: cn('h-5 w-5', statusConfig[getStatusKey(assessmentResult.verificationStatus)]?.color) })}
                     Status: {assessmentResult.verificationStatus}
                   </AlertTitle>
                 </Alert>

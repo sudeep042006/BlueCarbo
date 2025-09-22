@@ -5,9 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Wallet, Briefcase } from 'lucide-react';
+import { Wallet, Briefcase, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ethers } from 'ethers';
+import { BlueCarbonABI } from '@/lib/abi/BlueCarbon';
+
+// --- IMPORTANT ---
+// Replace this with the actual address of your deployed BlueCarbon smart contract.
+const CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS_HERE'; 
 
 // Mock project data - this would come from your smart contract or a backend
 const projects = [
@@ -21,7 +26,7 @@ export default function CorporateDashboardPage() {
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [walletAddress, setWalletAddress] = useState('');
-  const [tokenBalance, setTokenBalance] = useState(0); // Assuming this is a mock balance for now
+  const [isPurchasing, setIsPurchasing] = useState<number | null>(null);
   const [purchaseAmounts, setPurchaseAmounts] = useState<{[key: number]: number}>({});
 
   const isWalletConnected = !!walletAddress;
@@ -42,12 +47,18 @@ export default function CorporateDashboardPage() {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        if (window.ethereum.removeListener) {
+            window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
       };
     }
   }, []);
   
   const connectWallet = async () => {
+    if (CONTRACT_ADDRESS === 'YOUR_CONTRACT_ADDRESS_HERE') {
+        toast({ variant: 'destructive', title: 'Setup Required', description: 'The smart contract address has not been configured by the developer.' });
+        return;
+    }
     if (window.ethereum) {
       try {
         const browserProvider = new ethers.BrowserProvider(window.ethereum);
@@ -59,10 +70,6 @@ export default function CorporateDashboardPage() {
         setSigner(currentSigner);
         setWalletAddress(address);
         
-        // Mock token balance for demonstration
-        const randomBalance = Math.floor(Math.random() * 50000) + 1000;
-        setTokenBalance(randomBalance);
-        
         toast({ title: 'Wallet Connected', description: `Address: ${address.substring(0, 6)}...${address.substring(address.length - 4)}` });
       } catch (error) {
         console.error(error);
@@ -73,7 +80,7 @@ export default function CorporateDashboardPage() {
     }
   };
 
-  const handlePurchase = (projectId: number) => {
+  const handlePurchase = async (projectId: number) => {
     if (!signer) {
         toast({ variant: 'destructive', title: 'Wallet Not Connected', description: 'Please connect your wallet to proceed.' });
         return;
@@ -86,25 +93,35 @@ export default function CorporateDashboardPage() {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
-    const cost = amount * project.price;
-    if (cost > tokenBalance) {
-        toast({ variant: 'destructive', title: 'Insufficient Funds', description: `You need ${cost.toLocaleString()} tokens, but you only have ${tokenBalance.toLocaleString()}.` });
-        return;
+    setIsPurchasing(projectId);
+
+    try {
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, BlueCarbonABI, signer);
+        const cost = BigInt(amount) * BigInt(project.price);
+        const txValue = ethers.parseEther(cost.toString());
+        
+        // This is the actual transaction call
+        const tx = await contract.purchaseCredits(projectId, amount, { value: txValue });
+
+        toast({ title: 'Transaction Sent', description: 'Waiting for blockchain confirmation...' });
+
+        // Wait for the transaction to be mined
+        await tx.wait();
+
+        toast({ title: 'Purchase Successful!', description: `You purchased ${amount.toLocaleString()} credits from ${project.name}.` });
+        
+        // Reset purchase amount
+        setPurchaseAmounts(prev => ({...prev, [projectId]: 0}));
+    } catch (error: any) {
+        console.error("Purchase failed:", error);
+        toast({ 
+            variant: 'destructive', 
+            title: 'Purchase Failed', 
+            description: error?.data?.message || error.message || 'An error occurred during the transaction.'
+        });
+    } finally {
+        setIsPurchasing(null);
     }
-
-    // In a real application, you would create a transaction here to call the smart contract.
-    // For example:
-    // const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-    // const tx = await contract.purchase(projectId, amount, { value: ethers.parseEther(cost.toString()) });
-    // await tx.wait();
-
-    console.log(`Simulating purchase of ${amount} credits from project ${projectId} for ${cost} tokens.`);
-    
-    setTokenBalance(prev => prev - cost);
-    toast({ title: 'Purchase Successful!', description: `You purchased ${amount.toLocaleString()} credits from ${project.name} for ${cost.toLocaleString()} tokens.` });
-    
-    // Reset purchase amount
-    setPurchaseAmounts(prev => ({...prev, [projectId]: 0}));
   };
   
   const handleAmountChange = (projectId: number, value: string) => {
@@ -131,7 +148,6 @@ export default function CorporateDashboardPage() {
               <div className="text-sm">
                 <p className="font-semibold text-green-600">Wallet Connected</p>
                 <p className="text-muted-foreground truncate text-xs">{walletAddress}</p>
-                <p className="font-bold text-lg">{tokenBalance.toLocaleString()} Tokens</p>
               </div>
             </CardContent>
           </Card>
@@ -170,20 +186,21 @@ export default function CorporateDashboardPage() {
                         placeholder="Amount"
                         value={purchaseAmounts[project.id] || ''}
                         onChange={(e) => handleAmountChange(project.id, e.target.value)}
-                        disabled={!isWalletConnected}
+                        disabled={!isWalletConnected || isPurchasing === project.id}
                         min="0"
                     />
                     {purchaseAmounts[project.id] > 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
-                            Total Cost: {(purchaseAmounts[project.id] * project.price).toLocaleString()} Tokens
+                            Total Cost: {ethers.formatEther(BigInt(purchaseAmounts[project.id]) * BigInt(project.price) * BigInt("1000000000000000000"))} ETH
                         </p>
                     )}
                  </div>
                 <Button 
                   onClick={() => handlePurchase(project.id)} 
-                  disabled={!isWalletConnected || !purchaseAmounts[project.id] || purchaseAmounts[project.id] <= 0}
+                  disabled={!isWalletConnected || !purchaseAmounts[project.id] || purchaseAmounts[project.id] <= 0 || isPurchasing === project.id}
                   className="w-full sm:w-auto"
                 >
+                  {isPurchasing === project.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Purchase Credits
                 </Button>
               </div>

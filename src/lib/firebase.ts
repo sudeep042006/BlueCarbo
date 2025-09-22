@@ -7,12 +7,13 @@ import { getStorage } from "firebase/storage";
 
 // TODO: Replace with your app's Firebase project configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBxA9s-Juxgcgh61cAxUr3O7DZ9BvmZr1U",
+  authDomain: "bluecarbon-5bc27.firebaseapp.com",
+  projectId: "bluecarbon-5bc27",
+  storageBucket: "bluecarbon-5bc27.firebasestorage.app",
+  messagingSenderId: "792642793657",
+  appId: "1:792642793657:web:c44b3cd746c79d02182b68",
+  measurementId: "G-CC12TGHHYJ"
 };
 
 // Initialize Firebase
