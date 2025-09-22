@@ -69,7 +69,7 @@ export default function Home() {
           )}
           <div className="relative z-20 container mx-auto px-4 md:px-6">
             <h1 className="text-4xl md:text-6xl font-headline font-bold mb-4 tracking-tight">
-              Powering the Blue Carbon Economy
+              Powering the BlueCarbo Economy
             </h1>
             <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-primary-foreground/90">
               A transparent, secure, and reliable registry for verifying and tracking marine-based carbon credits.
@@ -89,7 +89,7 @@ export default function Home() {
         <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-headline font-bold">Why Choose Blue Carbon Registry?</h2>
+              <h2 className="text-3xl md:text-4xl font-headline font-bold">Why Choose BlueCarbo?</h2>
               <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
                 We provide the tools and trust needed to scale vital coastal and marine ecosystem restoration projects.
               </p>

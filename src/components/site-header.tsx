@@ -24,7 +24,7 @@ export function SiteHeader({ onLogin, onRegister, onCorporateLogin, onCorporateR
         <div className="mr-4 flex">
           <Link href="/" className="flex items-center space-x-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <span className="font-bold font-headline text-lg">Blue Carbon Registry</span>
+            <span className="font-bold font-headline text-lg">BlueCarbo</span>
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-2">

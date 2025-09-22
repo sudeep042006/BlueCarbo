@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Blue Carbon Registry',
+  title: 'BlueCarbo',
   description: 'A platform for tracking and verifying blue carbon projects.',
 };
 

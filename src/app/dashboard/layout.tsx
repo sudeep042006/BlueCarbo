@@ -88,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SidebarHeader>
         <Link href="/" className="flex items-center gap-2">
           <Leaf className="w-6 h-6 text-primary" />
-          <span className="font-bold text-lg font-headline">Blue Carbon</span>
+          <span className="font-bold text-lg font-headline">BlueCarbo</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -150,7 +150,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="md:hidden">
                 <Link href="/" className="flex items-center gap-2">
                     <Leaf className="w-6 h-6 text-primary" />
-                    <span className="font-bold text-lg font-headline">Blue Carbon</span>
+                    <span className="font-bold text-lg font-headline">BlueCarbo</span>
                 </Link>
             </div>
             <div className="ml-auto hidden md:block">
