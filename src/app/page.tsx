@@ -10,15 +10,15 @@ import { RegisterForm } from '@/components/auth/register-form';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ArrowRight, CheckCircle, Leaf, ShieldCheck, Briefcase } from 'lucide-react';
+import { ArrowRight, CheckCircle, Leaf, ShieldCheck, Briefcase, UserCog } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Home() {
   const [authAction, setAuthAction] = useState<'login' | 'register' | null>(null);
-  const [initialAuthTab, setInitialAuthTab] = useState<'ngo' | 'corporate'>('ngo');
+  const [initialAuthTab, setInitialAuthTab] = useState<'ngo' | 'corporate' | 'admin'>('ngo');
 
-  const openAuthModal = (action: 'login' | 'register', userType: 'ngo' | 'corporate') => {
+  const openAuthModal = (action: 'login' | 'register', userType: 'ngo' | 'corporate' | 'admin') => {
     setInitialAuthTab(userType);
     setAuthAction(action);
   };
@@ -45,7 +45,13 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <SiteHeader onLogin={() => openAuthModal('login', 'ngo')} onRegister={() => openAuthModal('register', 'ngo')} onCorporateLogin={() => openAuthModal('login', 'corporate')} />
+      <SiteHeader 
+        onLogin={() => openAuthModal('login', 'ngo')} 
+        onRegister={() => openAuthModal('register', 'ngo')} 
+        onCorporateLogin={() => openAuthModal('login', 'corporate')}
+        onCorporateRegister={() => openAuthModal('register', 'corporate')}
+        onAdminLogin={() => openAuthModal('login', 'admin')}
+      />
       <main className="flex-grow">
         {/* Hero Section */}
         <section className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center text-center text-white">
@@ -118,16 +124,20 @@ export default function Home() {
               {authAction === 'login' ? 'Login to access your dashboard.' : 'Join our platform to make a difference.'}
             </DialogDescription>
           </DialogHeader>
-          <Tabs defaultValue={initialAuthTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="ngo"><Leaf className="mr-2" /> NGO</TabsTrigger>
-              <TabsTrigger value="corporate"><Briefcase className="mr-2"/> Corporate</TabsTrigger>
+          <Tabs defaultValue={initialAuthTab} value={initialAuthTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="ngo" onClick={() => setInitialAuthTab('ngo')}><Leaf className="mr-2" /> NGO</TabsTrigger>
+              <TabsTrigger value="corporate" onClick={() => setInitialAuthTab('corporate')}><Briefcase className="mr-2"/> Corporate</TabsTrigger>
+              <TabsTrigger value="admin" onClick={() => setInitialAuthTab('admin')}><UserCog className="mr-2"/> Admin</TabsTrigger>
             </TabsList>
             <TabsContent value="ngo">
-                {authAction === 'login' ? <LoginForm userType="ngo" /> : <RegisterForm userType="ngo" />}
+                {authAction === 'login' ? <LoginForm userType="ngo" onLoginSuccess={() => setAuthAction(null)} /> : <RegisterForm userType="ngo" onRegisterSuccess={() => setAuthAction(null)} />}
             </TabsContent>
             <TabsContent value="corporate">
-                {authAction === 'login' ? <LoginForm userType="corporate" /> : <RegisterForm userType="corporate" />}
+                {authAction === 'login' ? <LoginForm userType="corporate" onLoginSuccess={() => setAuthAction(null)} /> : <RegisterForm userType="corporate" onRegisterSuccess={() => setAuthAction(null)} />}
+            </TabsContent>
+             <TabsContent value="admin">
+                {authAction === 'login' ? <LoginForm userType="admin" onLoginSuccess={() => setAuthAction(null)} /> : <RegisterForm userType="admin" onRegisterSuccess={() => setAuthAction(null)} />}
             </TabsContent>
           </Tabs>
         </DialogContent>

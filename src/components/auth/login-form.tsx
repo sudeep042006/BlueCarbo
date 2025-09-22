@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -9,18 +10,25 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { LogIn } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
+import { signInWithEmail } from '@/lib/auth';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(1, { message: 'Password is required.' }),
 });
 
-type UserType = 'ngo' | 'corporate';
+type UserType = 'ngo' | 'corporate' | 'admin';
 
-export function LoginForm({ userType }: { userType: UserType }) {
+interface LoginFormProps {
+    userType: UserType;
+    onLoginSuccess: () => void;
+}
+
+export function LoginForm({ userType, onLoginSuccess }: LoginFormProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -30,19 +38,41 @@ export function LoginForm({ userType }: { userType: UserType }) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log({ ...values, userType });
-    
-    toast({
-      title: 'Login Successful',
-      description: 'Redirecting to your dashboard...',
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    try {
+      await signInWithEmail(values.email, values.password);
+      
+      toast({
+        title: 'Login Successful',
+        description: 'Redirecting to your dashboard...',
+      });
 
-    if (userType === 'corporate') {
-      router.push('/dashboard/corporate');
-    } else {
-      router.push('/dashboard');
+      onLoginSuccess();
+
+      if (userType === 'corporate') {
+        router.push('/dashboard/corporate');
+      } else if (userType === 'admin') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message || 'An unexpected error occurred.',
+      });
+    } finally {
+        setIsLoading(false);
     }
+  }
+  
+  const userTypeDisplay = {
+      ngo: 'NGO',
+      corporate: 'Corporate',
+      admin: 'Admin'
   }
 
   return (
@@ -74,8 +104,9 @@ export function LoginForm({ userType }: { userType: UserType }) {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-          <LogIn className="mr-2 h-4 w-4" /> Login as {userType === 'ngo' ? 'NGO' : 'Corporate'}
+        <Button type="submit" disabled={isLoading} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+          {isLoading ? <Loader2 className="animate-spin"/> : <LogIn />}
+           Login as {userTypeDisplay[userType]}
         </Button>
       </form>
     </Form>

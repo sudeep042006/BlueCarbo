@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
   SidebarProvider,
@@ -18,43 +18,69 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Leaf, Shield, LogOut, Menu, Briefcase } from 'lucide-react';
+import { LayoutDashboard, Leaf, Shield, LogOut, Menu, Briefcase, UserCog } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { signOut } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({ title: 'Logged Out', description: 'You have been successfully logged out.' });
+      router.push('/');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Logout Failed', description: 'Could not log you out. Please try again.' });
+    }
+  }
 
   const isCorporate = pathname.startsWith('/dashboard/corporate');
+  const isAdmin = pathname.startsWith('/dashboard/admin');
   
-  const ngoNavItems = [
+  const navItems = [
     {
       href: '/dashboard',
       icon: LayoutDashboard,
       label: 'Dashboard',
+      roles: ['ngo']
     },
     {
       href: '/dashboard/projects',
       icon: Leaf,
       label: 'Projects',
+      roles: ['ngo']
     },
-    {
-      href: '/dashboard/admin',
-      icon: Shield,
-      label: 'Admin Verification',
-    },
-  ];
-
-  const corporateNavItems = [
      {
       href: '/dashboard/corporate',
       icon: Briefcase,
       label: 'Corporate Dashboard',
+      roles: ['corporate']
+    },
+    {
+      href: '/dashboard/admin',
+      icon: UserCog,
+      label: 'Admin',
+      roles: ['admin']
     },
   ];
 
-  const navItems = isCorporate ? corporateNavItems : ngoNavItems;
-  const user = isCorporate ? {name: 'Example Corp', type: 'Corporate Account'} : {name: 'Global Waves', type: 'NGO Account'};
+  let activeRole: 'ngo' | 'corporate' | 'admin' = 'ngo';
+  if (isCorporate) activeRole = 'corporate';
+  if (isAdmin) activeRole = 'admin';
+
+  const visibleNavItems = navItems.filter(item => item.roles.includes(activeRole));
+  
+  const user = {
+      ngo: {name: 'Global Waves', type: 'NGO Account', avatarSeed: 'ngo'},
+      corporate: {name: 'Example Corp', type: 'Corporate Account', avatarSeed: 'corp'},
+      admin: {name: 'Admin User', type: 'Administrator', avatarSeed: 'admin'},
+  }[activeRole];
 
 
   const SidebarNav = ({ className }: { className?: string }) => (
@@ -67,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <SidebarMenuItem key={item.label}>
               <Link href={item.href} legacyBehavior passHref>
                 <SidebarMenuButton isActive={pathname === item.href} tooltip={item.label}>
@@ -82,14 +108,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="flex items-center gap-2 p-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={`https://picsum.photos/seed/${isCorporate ? 'corp' : 'user'}/100/100`} />
-            <AvatarFallback>{isCorporate ? 'C' : 'N'}</AvatarFallback>
+            <AvatarImage src={`https://picsum.photos/seed/${user.avatarSeed}/100/100`} />
+            <AvatarFallback>{user.type.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col text-sm">
             <span className="font-semibold">{user.name}</span>
             <span className="text-muted-foreground text-xs">{user.type}</span>
           </div>
-          <Button variant="ghost" size="icon" className="ml-auto">
+          <Button variant="ghost" size="icon" className="ml-auto" onClick={handleSignOut}>
             <LogOut className="w-4 h-4" />
           </Button>
         </div>
