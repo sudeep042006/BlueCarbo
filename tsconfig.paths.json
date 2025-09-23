@@ -1,0 +1,9 @@
+// filepath: f:\Hackathons\H-8 SIH internal Hackathon\PROTOType\BlueCarbo\tsconfig.paths.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@artifacts/*": ["artifacts/*"]
+    }
+  }
+}

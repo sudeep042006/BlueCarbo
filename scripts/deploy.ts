@@ -1,20 +1,36 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const [deployer] = await ethers.getSigners();
-  console.log("Deploying contracts with the account:", deployer.address);
+  try {
+    const [deployer] = await ethers.getSigners();
+    console.log("Deploying contracts with account:", deployer.address);
+    
+    console.log("Account balance:", (await deployer.provider.getBalance(deployer.address)).toString());
 
-  const blueCarbon = await ethers.deployContract("BlueCarbon", [deployer.address]);
+    const BlueCarbon = await ethers.getContractFactory("BlueCarbon");
+    const blueCarbon = await BlueCarbon.deploy(deployer.address);
+    
+    console.log("Deploying...");
+    await blueCarbon.waitForDeployment();
+    
+    const contractAddress = await blueCarbon.getAddress();
+    console.log("BlueCarbon deployed to:", contractAddress);
 
-  await blueCarbon.waitForDeployment();
+    // Optional: Create an initial project
+    console.log("Creating initial project...");
+    const tx = await blueCarbon.createProject(
+      "Mangrove Restoration Pilot",
+      "Coastal Region",
+      ethers.parseUnits("1000", 0), // 1000 credits
+      ethers.parseEther("0.01") // 0.01 ETH per credit
+    );
+    await tx.wait();
+    console.log("Initial project created successfully");
 
-  const contractAddress = await blueCarbon.getAddress();
-  console.log(`BlueCarbon contract deployed to: ${contractAddress}`);
-
-  // You can add post-deployment logic here, e.g., creating an initial project
-  // const tx = await blueCarbon.createProject("Initial Project", "Global", 10000, ethers.parseEther("0.01"));
-  // await tx.wait();
-  // console.log("Created initial project.");
+  } catch (error) {
+    console.error("Deployment failed:", error);
+    process.exitCode = 1;
+  }
 }
 
 main().catch((error) => {
