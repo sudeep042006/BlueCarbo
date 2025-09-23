@@ -12,7 +12,7 @@ import { BlueCarbonABI } from '@/lib/abi/BlueCarbon';
 
 // --- IMPORTANT ---
 // Replace this with the actual address of your deployed BlueCarbon smart contract.
-const CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS_HERE'; 
+const CONTRACT_ADDRESS = 0x5D7cbB409E56B378c346E819350C6c9B8F494319; 
 
 // Mock project data - this would come from your smart contract or a backend
 const projects = [

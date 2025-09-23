@@ -47,7 +47,7 @@ const initialProjects: Project[] = [
 
 // --- IMPORTANT ---
 // Replace this with the actual address of your deployed BlueCarbon smart contract.
-const CONTRACT_ADDRESS = 'YOUR_CONTRACT_ADDRESS_HERE'; 
+const CONTRACT_ADDRESS = 0x5D7cbB409E56B378c346E819350C6c9B8F494319; 
 
 export default function NgoDashboardPage() {
   const { toast } = useToast();

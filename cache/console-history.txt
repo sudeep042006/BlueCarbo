@@ -1,0 +1,2 @@
+console.log("Balance in ETH:", ethers.formatEther(balance
+const balance = await ethers.provider.getBalance("0x8861A6f3973ce0f9160562A751b7681459325648");
