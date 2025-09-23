@@ -14,8 +14,8 @@ contract BlueCarbon is ERC1155, Ownable {
         bool exists;
     }
 
-    uint256 public nextProjectId;
     mapping(uint256 => Project) public projects;
+    uint256 public nextProjectId;
 
     event ProjectCreated(
         uint256 indexed projectId,
@@ -24,6 +24,7 @@ contract BlueCarbon is ERC1155, Ownable {
         uint256 totalCredits,
         uint256 price
     );
+
     event CreditsPurchased(
         address indexed buyer,
         uint256 indexed projectId,
@@ -32,16 +33,16 @@ contract BlueCarbon is ERC1155, Ownable {
     );
 
     constructor(address initialOwner) ERC1155("") Ownable(initialOwner) {
-        nextProjectId = 1; // Start project IDs from 1
+        nextProjectId = 1;
     }
 
     function createProject(
         string memory _name,
         string memory _location,
         uint256 _totalCredits,
-        uint256 _price // in Wei
+        uint256 _price
     ) public onlyOwner {
-        uint256 projectId = nextProjectId;
+        uint256 projectId = nextProjectId++;
         projects[projectId] = Project({
             projectId: projectId,
             name: _name,
@@ -50,24 +51,24 @@ contract BlueCarbon is ERC1155, Ownable {
             price: _price,
             exists: true
         });
-
         _mint(owner(), projectId, _totalCredits, "");
-
         emit ProjectCreated(projectId, _name, _location, _totalCredits, _price);
-        nextProjectId++;
     }
 
     function purchaseCredits(uint256 _projectId, uint256 _amount) public payable {
         Project storage project = projects[_projectId];
         require(project.exists, "Project does not exist");
-        require(_amount > 0, "Amount must be greater than zero");
+        require(
+            balanceOf(owner(), _projectId) >= _amount,
+            "Not enough credits available"
+        );
 
-        uint256 totalCost = project.price * _amount;
-        require(msg.value == totalCost, "Incorrect Ether sent");
+        uint256 cost = project.price * _amount;
+        require(msg.value == cost, "Incorrect ETH amount sent");
 
-        safeTransferFrom(owner(), msg.sender, _projectId, _amount, "");
+        _safeTransferFrom(owner(), msg.sender, _projectId, _amount, "");
 
-        emit CreditsPurchased(msg.sender, _projectId, _amount, totalCost);
+        emit CreditsPurchased(msg.sender, _projectId, _amount, msg.value);
     }
     
     function updateProjectPrice(uint256 _projectId, uint256 _newPrice) public onlyOwner {
@@ -76,14 +77,16 @@ contract BlueCarbon is ERC1155, Ownable {
     }
 
     function withdraw() public onlyOwner {
-        (bool success, ) = owner().call{value: address(this).balance}("");
+        (bool success, ) = payable(owner()).call{value: address(this).balance}("");
         require(success, "Withdrawal failed");
     }
 
     // The following functions are overrides required by Solidity.
 
     function uri(uint256 _id) public view override returns (string memory) {
-        // In a real implementation, you might return a URI pointing to project metadata
-        return "";
+        require(projects[_id].exists, "Project does not exist");
+        // In a real implementation, you would return a unique URI for each token ID
+        // possibly pointing to a metadata JSON file on IPFS.
+        return "https://bluecarbo.dev/api/token/{id}";
     }
 }
