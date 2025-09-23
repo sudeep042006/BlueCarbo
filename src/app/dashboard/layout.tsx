@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Leaf, Shield, LogOut, Menu, Briefcase, UserCog } from 'lucide-react';
+import { LayoutDashboard, Leaf, Shield, LogOut, Menu, Briefcase, UserCog, Wallet, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { signOut } from '@/lib/auth';
@@ -54,6 +54,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       href: '/dashboard/projects',
       icon: Leaf,
       label: 'Projects',
+      roles: ['ngo']
+    },
+     {
+      href: '/dashboard/balance',
+      icon: Wallet,
+      label: 'Balance',
+      roles: ['ngo']
+    },
+    {
+      href: '/dashboard/marketplace',
+      icon: ShoppingCart,
+      label: 'Marketplace',
       roles: ['ngo']
     },
      {
