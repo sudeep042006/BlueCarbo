@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Leaf, Briefcase, UserCog } from 'lucide-react';
+import { Leaf, Briefcase, UserCog, Handshake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,9 +15,10 @@ type SiteHeaderProps = {
   onCorporateLogin: () => void;
   onCorporateRegister: () => void;
   onAdminLogin: () => void;
+  onShowPartners: () => void;
 };
 
-export function SiteHeader({ onLogin, onRegister, onCorporateLogin, onCorporateRegister, onAdminLogin }: SiteHeaderProps) {
+export function SiteHeader({ onLogin, onRegister, onCorporateLogin, onCorporateRegister, onAdminLogin, onShowPartners }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -27,6 +28,10 @@ export function SiteHeader({ onLogin, onRegister, onCorporateLogin, onCorporateR
             <span className="font-bold font-headline text-lg">BlueCarbo</span>
           </Link>
         </div>
+         <Button variant="ghost" className="hidden sm:flex mr-auto" onClick={onShowPartners}>
+            <Handshake className="mr-2" />
+            Partners
+        </Button>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <nav className="hidden sm:flex items-center space-x-2">
             <Button variant="ghost" onClick={onLogin}>
@@ -71,6 +76,8 @@ export function SiteHeader({ onLogin, onRegister, onCorporateLogin, onCorporateR
                   </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={onShowPartners}>Partners</DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={onLogin}>NGO Login</DropdownMenuItem>
                   <DropdownMenuItem onClick={onRegister}>Register NGO</DropdownMenuItem>
                   <DropdownMenuSeparator />

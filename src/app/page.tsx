@@ -10,13 +10,18 @@ import { RegisterForm } from '@/components/auth/register-form';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ArrowRight, CheckCircle, Leaf, ShieldCheck, Briefcase, UserCog } from 'lucide-react';
+import { ArrowRight, CheckCircle, Leaf, ShieldCheck, Briefcase, UserCog, Building, Handshake, Sprout } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { featuredNGOs, corporatePartners } from '@/lib/partners';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 export default function Home() {
   const [authAction, setAuthAction] = useState<'login' | 'register' | null>(null);
   const [initialAuthTab, setInitialAuthTab] = useState<'ngo' | 'corporate' | 'admin'>('ngo');
+  const [isPartnersSheetOpen, setIsPartnersSheetOpen] = useState(false);
 
   const openAuthModal = (action: 'login' | 'register', userType: 'ngo' | 'corporate' | 'admin') => {
     setInitialAuthTab(userType);
@@ -51,6 +56,7 @@ export default function Home() {
         onCorporateLogin={() => openAuthModal('login', 'corporate')}
         onCorporateRegister={() => openAuthModal('register', 'corporate')}
         onAdminLogin={() => openAuthModal('login', 'admin')}
+        onShowPartners={() => setIsPartnersSheetOpen(true)}
       />
       <main className="flex-grow">
         {/* Hero Section */}
@@ -114,6 +120,61 @@ export default function Home() {
       </main>
       <SiteFooter />
 
+      {/* Partners Sheet */}
+      <Sheet open={isPartnersSheetOpen} onOpenChange={setIsPartnersSheetOpen}>
+        <SheetContent side="left" className="sm:max-w-md w-full">
+            <SheetHeader>
+                <SheetTitle className="font-headline text-2xl flex items-center gap-2"><Handshake />Our Partners</SheetTitle>
+                <SheetDescription>
+                A growing community of organizations committed to a healthier planet.
+                </SheetDescription>
+            </SheetHeader>
+            <div className="py-6 space-y-8">
+                <div>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-primary"><Sprout />Featured NGOs</h3>
+                    <div className="space-y-4">
+                        {featuredNGOs.map(ngo => (
+                            <Card key={ngo.id} className="p-3">
+                                <div className="flex items-center gap-4">
+                                    <Avatar>
+                                        <AvatarImage src={`https://picsum.photos/seed/${ngo.avatarSeed}/100`} alt={ngo.name} />
+                                        <AvatarFallback>{ngo.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-semibold">{ngo.name}</p>
+                                        <p className="text-sm text-muted-foreground">{ngo.mission}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+
+                 <div>
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-accent"><Building />Corporate Partners</h3>
+                    <div className="space-y-4">
+                        {corporatePartners.map(corp => (
+                             <Card key={corp.id} className="p-3">
+                                <div className="flex items-center gap-4">
+                                    <Avatar>
+                                        <AvatarImage src={`https://picsum.photos/seed/${corp.avatarSeed}/100`} alt={corp.name} />
+                                        <AvatarFallback>{corp.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-semibold">{corp.name}</p>
+                                        <p className="text-sm text-muted-foreground">{corp.industry}</p>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </SheetContent>
+      </Sheet>
+
+
+      {/* Auth Dialog */}
       <Dialog open={authAction !== null} onOpenChange={(isOpen) => !isOpen && setAuthAction(null)}>
         <DialogContent className="sm:max-w-[475px]">
           <DialogHeader>
