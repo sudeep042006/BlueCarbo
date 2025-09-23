@@ -2,10 +2,14 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
+import { Leaf } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'BlueCarbo',
   description: 'A platform for tracking and verifying blue carbon projects.',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
